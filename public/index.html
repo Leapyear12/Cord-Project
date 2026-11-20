@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chatterbox</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="auth" class="auth">
+    <div class="auth-card">
+      <div class="auth-brand">Chatterbox</div>
+      <p class="auth-tagline">Plain text and voice chat for small groups.</p>
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active" type="button">Log in</button>
+        <button id="tab-register" class="auth-tab" type="button">Register</button>
+      </div>
+      <form id="auth-form" class="auth-form" novalidate>
+        <label class="field">
+          <span>Username</span>
+          <input id="auth-username" name="username" autocomplete="username" maxlength="24" required />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input id="auth-password" name="password" type="password" autocomplete="current-password" maxlength="200" required />
+        </label>
+        <p id="auth-error" class="form-error" hidden></p>
+        <button id="auth-submit" class="btn primary wide" type="submit">Log in</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="app" class="app" hidden>
+    <nav class="rail">
+      <div id="rail-servers" class="rail-servers"></div>
+      <button id="rail-add" class="rail-btn rail-add" title="Create a server" aria-label="Create a server">+</button>
+      <button id="rail-join" class="rail-btn rail-join" title="Join a server" aria-label="Join a server">&#8620;</button>
+      <button id="btn-sidebar-toggle" class="rail-btn rail-toggle" title="Toggle channel list" aria-label="Toggle channel list" aria-pressed="true">&#9776;</button>
+      <div class="rail-spacer"></div>
+      <div id="rail-user" class="rail-user" title="Log out"></div>
+    </nav>
+
+    <aside id="sidebar" class="sidebar">
+      <header class="sidebar-header">
+        <span id="server-name" class="server-name">No server</span>
+        <button id="btn-invite" class="btn ghost small" title="Invite people" hidden>Invite</button>
+        <button id="btn-sidebar-collapse" class="icon-btn" title="Hide channel list" aria-label="Hide channel list">&#171;</button>
+      </header>
+      <div class="sidebar-scroll">
+        <section class="channel-group">
+          <header class="channel-group-header">
+            <span>Text channels</span>
+            <button id="btn-add-text" class="icon-btn" title="Create text channel" hidden>+</button>
+          </header>
+          <ul id="text-channels" class="channel-list"></ul>
+        </section>
+        <section class="channel-group">
+          <header class="channel-group-header">
+            <span>Project</span>
+            <button id="btn-project-new" class="icon-btn" title="Create a project file" hidden>+</button>
+          </header>
+          <ul class="channel-list">
+            <li>
+              <button id="open-project" class="channel-row" type="button">
+                <span class="channel-icon">&#9636;</span>
+                <span class="channel-label">Files &amp; editor</span>
+              </button>
+            </li>
+          </ul>
+        </section>
+        <section class="channel-group">
+          <header class="channel-group-header">
+            <span>Voice channels</span>
+            <button id="btn-add-voice" class="icon-btn" title="Create voice channel" hidden>+</button>
+          </header>
+          <ul id="voice-channels" class="channel-list"></ul>
+        </section>
+      </div>
+      <div id="voice-dock" class="voice-dock" hidden>
+        <div class="voice-dock-info">
+          <span class="voice-dot"></span>
+          <div>
+            <div class="voice-dock-title" id="voice-dock-name">Voice</div>
+            <div class="voice-dock-sub" id="voice-dock-sub">Connected</div>
+          </div>
+        </div>
+        <div class="voice-dock-actions">
+          <button id="dock-mic" class="icon-btn" title="Toggle microphone">Mic</button>
+          <button id="dock-cam" class="icon-btn" title="Toggle camera">Cam</button>
+          <button id="dock-screen" class="icon-btn" title="Share screen">Screen</button>
+          <button id="dock-leave" class="icon-btn danger-text" title="Leave voice">Leave</button>
+        </div>
+      </div>
+      <footer class="sidebar-user">
+        <div id="me-avatar" class="avatar small"></div>
+        <div id="me-name" class="sidebar-user-name"></div>
+        <button id="btn-logout" class="icon-btn" title="Log out">Log out</button>
+      </footer>
+    </aside>
+
+    <div id="split-sidebar" class="splitter" role="separator" aria-orientation="vertical" aria-label="Resize channel list" tabindex="0" title="Drag to resize · double-click to reset"></div>
+
+    <main class="main">
+      <div class="main-column">
+        <section id="text-view" class="view text-view" hidden>
+          <header class="chat-header">
+            <div class="chat-title"><span class="hash">#</span><span id="channel-name">general</span></div>
+            <div class="chat-actions">
+              <button id="btn-members" class="btn ghost small">Members</button>
+            </div>
+          </header>
+          <div id="messages" class="messages"></div>
+          <div class="composer-wrap">
+            <div id="typing" class="typing"></div>
+            <div id="pending-files" class="pending-files" hidden></div>
+            <form id="composer" class="composer">
+              <input id="file-input" type="file" multiple hidden />
+              <button id="btn-attach" class="attach-btn" type="button" title="Attach files" aria-label="Attach files">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l8.8-8.8a4 4 0 0 1 5.7 5.7l-8.8 8.8a2 2 0 0 1-2.8-2.8l8-8"></path></svg>
+              </button>
+              <input id="message-input" maxlength="2000" autocomplete="off" placeholder="Message #general" />
+              <button class="btn primary" type="submit">Send</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="voice-view" class="view voice-view" hidden>
+          <header class="chat-header">
+            <div class="chat-title">
+              <span id="voice-title">Voice</span>
+              <span id="voice-status" class="connection-status">Connecting…</span>
+            </div>
+            <div class="chat-actions">
+              <button id="voice-back" class="btn ghost small">Back to chat</button>
+            </div>
+          </header>
+          <div id="voice-tiles" class="voice-tiles"></div>
+          <div class="voice-controls">
+            <button id="voice-mic" class="btn control">Mute</button>
+            <button id="voice-cam" class="btn control">Camera off</button>
+            <button id="voice-screen" class="btn control">Share screen</button>
+            <button id="voice-leave" class="btn danger">Leave</button>
+          </div>
+        </section>
+
+        <section id="project-view" class="view project-view" hidden>
+          <header class="chat-header">
+            <div class="chat-title">
+              <span class="channel-icon project-icon">&#9636;</span>
+              <span id="project-title">Project files</span>
+              <span id="project-presence" class="presence-row"></span>
+            </div>
+            <div class="chat-actions">
+              <div class="mode-switch" role="group" aria-label="Sync mode">
+                <button id="mode-live" class="mode-btn" type="button" title="Edits appear on everyone's screen instantly">Live</button>
+                <button id="mode-review" class="mode-btn" type="button" title="Edits are pushed only after an approved merge">Review</button>
+              </div>
+              <button id="btn-project-files" class="btn ghost small" title="Toggle file list" aria-pressed="true">Files</button>
+              <button id="btn-new-doc" class="btn ghost small">New file</button>
+              <button id="project-close" class="btn ghost small">Back to chat</button>
+            </div>
+          </header>
+          <div class="project-body">
+            <aside id="project-files" class="project-files">
+              <header class="channel-group-header">
+                <span>Files</span>
+                <button id="btn-add-doc" class="icon-btn" title="New file">+</button>
+              </header>
+              <ul id="project-doc-list" class="channel-list"></ul>
+            </aside>
+            <div id="split-files" class="splitter" role="separator" aria-orientation="vertical" aria-label="Resize file list" tabindex="0" title="Drag to resize · double-click to reset"></div>
+            <div class="project-editor">
+              <div class="editor-toolbar">
+                <select id="editor-language" class="editor-language" title="Syntax language" disabled>
+                  <option value="plain">Plain text</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="cpp">C++</option>
+                  <option value="java">Java</option>
+                  <option value="python">Python</option>
+                </select>
+                <span id="editor-status" class="editor-status">Select a file to start editing.</span>
+                <span id="editor-dirty" class="editor-status"></span>
+                <button id="btn-propose" class="btn primary small" type="button" hidden>Propose merge</button>
+              </div>
+              <div class="code-editor">
+                <div id="editor-gutter" class="editor-gutter" aria-hidden="true"></div>
+                <div class="editor-surface">
+                  <pre id="editor-highlight" class="editor-highlight" aria-hidden="true"></pre>
+                  <textarea id="editor-textarea" wrap="off" spellcheck="false" disabled placeholder="Open or create a file to start editing…"></textarea>
+                </div>
+              </div>
+              <div id="project-merges" class="project-merges"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="empty-view" class="view empty-view" hidden>
+          <div class="empty-inner">
+            <h2>No server selected</h2>
+            <p class="muted">Create a server or join one with an invite code.</p>
+            <div class="empty-actions">
+              <button id="empty-create" class="btn primary">Create a server</button>
+              <button id="empty-join" class="btn">Join a server</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="split-thread" class="splitter" role="separator" aria-orientation="vertical" aria-label="Resize thread panel" tabindex="0" title="Drag to resize · double-click to reset" hidden></div>
+
+      <aside id="thread-panel" class="thread-panel" hidden>
+        <header class="sidebar-header">
+          <span>Thread</span>
+          <button id="thread-close" class="icon-btn" type="button" title="Close thread">&#215;</button>
+        </header>
+        <div id="thread-root" class="thread-root"></div>
+        <div id="thread-replies" class="thread-replies"></div>
+        <form id="thread-composer" class="thread-composer">
+          <input id="thread-input" maxlength="2000" autocomplete="off" placeholder="Reply in thread…" />
+          <button class="btn primary small" type="submit">Reply</button>
+        </form>
+      </aside>
+
+      <div id="split-members" class="splitter" role="separator" aria-orientation="vertical" aria-label="Resize members panel" tabindex="0" title="Drag to resize · double-click to reset"></div>
+
+      <aside id="members-panel" class="members">
+        <header class="members-header">
+          Members <span id="member-count" class="muted">0</span>
+          <button id="btn-members-close" class="icon-btn" type="button" title="Close members" aria-label="Close members">&#215;</button>
+        </header>
+        <div id="member-list" class="member-list"></div>
+      </aside>
+    </main>
+  </div>
+
+  <dialog id="dlg-create-server" class="modal">
+    <form id="form-create-server" class="modal-form">
+      <h3>Create a server</h3>
+      <p class="modal-sub">Give your server a name. You can add channels next.</p>
+      <label class="field"><span>Server name</span><input id="new-server-name" maxlength="32" required /></label>
+      <p class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Create server</button>
+      </div>
+      <p class="modal-hint">Have an invite? <button type="button" id="goto-join" class="link-btn">Join a server</button></p>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-join-server" class="modal">
+    <form id="form-join-server" class="modal-form">
+      <h3>Join a server</h3>
+      <p class="modal-sub">Enter the invite code someone shared with you.</p>
+      <label class="field"><span>Invite code</span><input id="join-code" maxlength="64" autocomplete="off" required /></label>
+      <p class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Join server</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-create-channel" class="modal">
+    <form id="form-create-channel" class="modal-form">
+      <h3 id="channel-modal-title">Create text channel</h3>
+      <p class="modal-sub" id="channel-modal-sub">Channels keep conversations organized.</p>
+      <label class="field"><span>Channel name</span><input id="new-channel-name" maxlength="32" required /></label>
+      <p class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Create channel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-new-file" class="modal">
+    <form id="form-new-file" class="modal-form">
+      <h3>New project file</h3>
+      <p class="modal-sub">Give the file a name. It opens in the editor right away.</p>
+      <label class="field"><span>File name</span><input id="new-file-name" maxlength="64" placeholder="notes.md" required /></label>
+      <p class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Create file</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-invite" class="modal">
+    <div class="modal-form">
+      <h3>Invite people to <span id="invite-server-name"></span></h3>
+      <p class="modal-sub">Share this code. They can join from the server rail with the join button.</p>
+      <div class="invite-row">
+        <code id="invite-code">--------</code>
+        <button id="btn-copy-invite" class="btn" type="button">Copy</button>
+      </div>
+      <p class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" data-close>Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="toast-container" class="toasts"></div>
+
+  <script src="/vendor/socket.io.min.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

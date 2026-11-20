@@ -1,0 +1,11 @@
+.env
+.vercel
+data
+deliverables
+shots
+scripts
+Dockerfile
+docker-compose.yml
+.dockerignore
+npm-debug.log*
+*.mjs.bak

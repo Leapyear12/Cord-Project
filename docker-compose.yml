@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: chatterbox
+      POSTGRES_USER: chatterbox
+      POSTGRES_PASSWORD: chatterbox
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatterbox -d chatterbox"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgres://chatterbox:chatterbox@db:5432/chatterbox
+      PORT: 4599
+      HOST: 0.0.0.0
+      STUN_URL: ${STUN_URL:-stun:stun.l.google.com:19302}
+      TURN_URL: ${TURN_URL:-}
+      TURN_USERNAME: ${TURN_USERNAME:-}
+      TURN_CREDENTIAL: ${TURN_CREDENTIAL:-}
+    ports:
+      - "4599:4599"
+    volumes:
+      - uploads:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
